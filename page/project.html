@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <title>🌍 Hospital's data in Bangkok Web Application</title>
+
+    <style>
+        html,
+        body,
+        #viewDiv {
+            height: 95%;
+            margin: 0;
+            padding: 0;
+        }
+
+        @font-face {
+            font-family: 'ClashDisplay';
+            src: url('../fonts/ClashDisplay-Variable.ttf') format('truetype'); 
+        }
+    </style>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.32/esri/themes/light/main.css" />
+    <script>
+        var esriConfig = {
+            apiKey: "AAPTxy8BH1VEsoebNVZXo8HurO6R7OWkb4bmwjG96jGOFdU_21U3bnsNqmypGIpLtr4p8wtJViWhH9AFmTfZ4nogT6Ambby6xilluNLuSXND48A8c5AmIA-1kgjHeIXw84hvF6S4TZOBPR2_2oEpbhVuhBz6mw79zBWcVXlKr8G4FZ84p-VoTmV1_XWtgHspkf6mBj6EzPhQgJcO1zrFhxaz8TMKh7or3NtCPlcy_vJkgMk.AT1_dzEMY6Ea",
+        };
+    </script>
+    <script src="https://js.arcgis.com/4.32/"></script>
+
+
+    <!-- import methods -->
+    <script type="module">
+        import { setupToggleButton } from '../method/filter.js';
+        window.setupToggleButton = setupToggleButton; // ส่งออกไว้บน window เพื่อให้ใช้ใน require ได้
+    </script>
+
+</head>
+
+<body>
+    <div class="text-xl font-bold p-5 flex justify-between" style="font-family: 'ClashDisplay'"> 
+        <div>
+            <span style="padding-right:10px;">  🌍  </span>Hospital's data in Bangkok Web Application 
+        </div>
+        <div class="flex gap-2">
+            <button id="search-data-button" class="bg-blue-300 hover:bg-blue-300 text-white font-bold py-1 px-3 rounded-full">🔎 search</button>
+            <button id="find-route-button" class="bg-gray-900 hover:bg-blue-300 text-white font-bold py-1 px-3 rounded-full">🚗 find route</button>
+            <button id="edit-data-button" class="bg-gray-900 hover:bg-blue-300 text-white font-bold py-1 px-3 rounded-full">✏️ edit</button>
+        </div>
+    </div>
+    <div id="viewDiv"></div>
+    <div
+        id="select-by-circle"
+        class="esri-widget esri-widget--button esri-widget esri-interactive"
+        title="Select features by rectangle"
+    >
+        <span class="esri-icon-checkbox-unchecked"></span>
+    </div>
+    <div
+        id="clear-selection"
+        class="esri-widget esri-widget--button esri-widget esri-interactive"
+        title="Clear selection"
+    >
+        <span class="esri-icon-erase"></span>
+    </div>
+
+    <script>
+        require([
+            "esri/Map",
+            "esri/views/MapView",
+            "esri/WebMap",
+            "esri/layers/FeatureLayer",
+            "esri/widgets/Search",
+            "esri/renderers/HeatmapRenderer",
+            "esri/widgets/Editor",
+            "esri/widgets/Sketch/SketchViewModel",
+            "esri/layers/GraphicsLayer",
+            "esri/widgets/Home",
+            "esri/widgets/Legend",
+            "esri/layers/CSVLayer",
+            "esri/widgets/Directions", 
+            "esri/layers/RouteLayer",
+            "esri/widgets/Compass"
+        ], function (
+                    Map, 
+                    MapView, 
+                    WebMap, 
+                    FeatureLayer, 
+                    Search, 
+                    HeatmapRenderer, 
+                    Editor, 
+                    SketchViewModel,
+                    GraphicsLayer,
+                    Home,
+                    Legend,
+                    CSVLayer,
+                    Directions,
+                    RouteLayer,
+                    Compass,
+            ) {
+            const apiKey = "AAPTxy8BH1VEsoebNVZXo8HurO6R7OWkb4bmwjG96jGOFdU_21U3bnsNqmypGIpLtr4p8wtJViWhH9AFmTfZ4nogT6Ambby6xilluNLuSXND48A8c5AmIA-1kgjHeIXw84hvF6S4TZOBPR2_2oEpbhVuhBz6mw79zBWcVXlKr8G4FZ84p-VoTmV1_XWtgHspkf6mBj6EzPhQgJcO1zrFhxaz8TMKh7or3NtCPlcy_vJkgMk.AT1_dzEMY6Ea";
+
+            const govHospitalHeatmapRenderer = new HeatmapRenderer({
+                colorStops: [
+                    // ratio: ค่าระดับความหนาแน่น (ตั้งแต่ 0 ถึง 1)
+                    { color: "rgba(63, 40, 102, 0)", ratio: 0 }, 
+                    { color: "#E1ECFF", ratio: 0.083 },
+                    { color: "#C4DAFF", ratio: 0.166 },
+                    { color: "#ADCCFF", ratio: 0.249 },
+                    { color: "#A5C4F5", ratio: 0.332 },
+                    { color: "#9EBCED", ratio: 0.415 },
+                    { color: "#94B1E0", ratio: 0.498 },
+                    { color: "#5271A6", ratio: 0.581 },
+                    { color: "#1A3A75", ratio: 0.664 },
+                    { color: "#12275A", ratio: 0.747 },
+                    { color: "#0D1A48", ratio: 0.83 },
+                    { color: "#020024", ratio: 0.913 },
+                    { color: "#FFBCBA", ratio: 1 }, // สีสำหรับแสดงบนพื้นที่ความหนาแน่นสูงสุด
+                ],
+                maxDensity: 0.01, // กำหนดว่าความหนาแน่นสูงสุดที่จะแสดงผลใน Heatmap คือ 0.01 (ใช้ปรับขนาดหรือช่วงให้เหมาะสมกับข้อมูล)
+                minDensity: 0, // กำหนดความหนาแน่นต่ำสุดที่จะเริ่มแสดงผล (ค่า 0 หมายถึงไม่มีข้อมูล)
+            });
+
+            const privHospitalHeatmapRenderer = new HeatmapRenderer({
+                colorStops: [
+                    // ratio: ค่าระดับความหนาแน่น (ตั้งแต่ 0 ถึง 1)
+                    { color: "rgba(63, 40, 102, 0)", ratio: 0 }, 
+                    { color: "#E2B0CE", ratio: 0.083 },
+                    { color: "#DBB1D0", ratio: 0.166 },
+                    { color: "#D3B2D3", ratio: 0.249 },
+                    { color: "#CDB3D5", ratio: 0.332 },
+                    { color: "#C7B4D7", ratio: 0.415 },
+                    { color: "#C1B5D9", ratio: 0.498 },
+                    { color: "#BCB6DB", ratio: 0.581 },
+                    { color: "#B3B7DE", ratio: 0.664 },
+                    { color: "#ABB8E1", ratio: 0.747 },
+                    { color: "#A5B9E3", ratio: 0.83 },
+                    { color: "#9FBAE5", ratio: 0.913 },
+                    { color: "#372B8A", ratio: 1 }, // สีสำหรับแสดงบนพื้นที่ความหนาแน่นสูงสุด
+                ],
+                maxDensity: 0.01, // กำหนดว่าความหนาแน่นสูงสุดที่จะแสดงผลใน Heatmap คือ 0.01 (ใช้ปรับขนาดหรือช่วงให้เหมาะสมกับข้อมูล)
+                minDensity: 0, // กำหนดความหนาแน่นต่ำสุดที่จะเริ่มแสดงผล (ค่า 0 หมายถึงไม่มีข้อมูล)
+            });
+
+            let govHospitalPinRenderer = {
+                type: "class-breaks",
+                field: "num_bed",
+                classBreakInfos: [
+                    {
+                        minValue: 401,
+                        maxValue: 10000,
+                        symbol: {
+                            type: "picture-marker",
+                            url: "../icon/L_G_HospitalIcon.png", 
+                            width: "45px",
+                            height: "45px"
+                        },
+                        label: "มากกว่า 400 เตียง"
+                    },
+                    {
+                        minValue: 151,
+                        maxValue: 400,
+                        symbol: {
+                            type: "picture-marker",
+                            url: "../icon/M_G_HospitalIcon.png",
+                            width: "45px",
+                            height: "45px"
+                        },
+                        label: "151 - 400 เตียง"
+                    },
+                    {
+                        minValue: 1,
+                        maxValue: 150,
+                        symbol: {
+                            type: "picture-marker",
+                            url: "../icon/S_G_HospitalIcon.png",
+                            width: "45px",
+                            height: "45px"
+                        },
+                        label: "1 - 150 เตียง"
+                    }
+                ]
+            };
+
+            let privHospitalPinRenderer = {
+                type: "class-breaks",
+                field: "num_bed",
+                classBreakInfos: [
+                    {
+                        minValue: 401,
+                        maxValue: 10000,
+                        symbol: {
+                            type: "picture-marker",
+                            url: "../icon/L_P_HospitalIcon.png", 
+                            width: "45px",
+                            height: "45px"
+                        },
+                        label: "มากกว่า 400 เตียง"
+                    },
+                    {
+                        minValue: 151,
+                        maxValue: 400,
+                        symbol: {
+                            type: "picture-marker",
+                            url: "../icon/M_P_HospitalIcon.png",
+                            width: "45px",
+                            height: "45px"
+                        },
+                        label: "151 - 400 เตียง"
+                    },
+                    {
+                        minValue: 1,
+                        maxValue: 150,
+                        symbol: {
+                            type: "picture-marker",
+                            url: "../icon/S_P_HospitalIcon.png",
+                            width: "45px",
+                            height: "45px"
+                        },
+                        label: "1 - 150 เตียง"
+                    }
+                ]
+            };
+
+            let pharmacyPinRenderer = {
+                type: "simple",
+                symbol: {
+                    type: "picture-marker",
+                    url: "../icon/drugs.png", // URL ของไอคอน
+                    width: "20px",
+                    height: "20px"
+                },
+                label: "ร้านขายยา"        
+            };
+
+            const bangkokDistrictLayer = new FeatureLayer({
+                portalItem: {
+                    id: "bce116f3ded642eca70f757c8ca44d66",
+                },
+                outFields: ["*"],
+            });
+
+            const pharmacyCSVLayer = new CSVLayer({
+                url: "https://pharmacydata.tiiny.site/pharmacy_data.csv",
+                latitudeField: "dsLatitude",
+                longitudeField: "dsLongitude",
+                popupTemplate: {
+                    title: "{dsName}",
+                    content: `
+                    <b>📍 ที่อยู่:</b> {dsAddress} <br>
+                    <b>🧭 โซน:</b> {bkkZone} <br>
+                    <b>🗺️ เขต:</b> {dsDistrict} <br>
+                    <b>☎️ เบอร์ติดต่อ:</b> {dsPhone} <br>
+                    <img src="https://img.graphicsurf.com/2020/09/people-in-pharmacy-vector-illustration.jpg" alt="Place Image" width="100%">
+                `,
+                },
+                renderer: pharmacyPinRenderer, // Start with heatmap at low zoom levels
+            });
+
+            const govHospitalFeatureLayer = new FeatureLayer({
+                url: "https://services3.arcgis.com/D5fxuanxFwyX9ohT/arcgis/rest/services/gov_hos/FeatureServer",
+                outFields: ["*"],
+                popupTemplate: {
+                    title: `โรงพยาบาลรัฐ - {name}`,
+                    content: `
+                        <b>🗺️ ที่อยู่:</b> {address} <br>
+                        <b>🧭 รหัสไปรษณีย์:</b> {dcode} <br>
+                        <b>🏝️ เขต:</b> {dname} <br>
+                        <b>☎️ เบอร์ติดต่อ:</b> {tel} <br>
+                        <b>🌎 เว็บไซต์:</b> <a href="https://{url}" target="_blank">{name}</a> <br>
+                        <b>🛌 จำนวนเตียง:</b> {num_bed} <br>
+                        <b>🏥 สังกัด:</b> {belong} <br>
+                        <b>🗂️ ประเภท:</b> {type} <br>
+                        <img src="https://static.vecteezy.com/system/resources/thumbnails/007/681/899/small/hospital-building-outside-composition-vector.jpg" alt="Hospital Image" width="100%">
+                    `,
+                },
+                renderer: govHospitalPinRenderer,
+            });
+
+            const privHospitalFeatureLayer = new FeatureLayer({
+                url: "https://services3.arcgis.com/D5fxuanxFwyX9ohT/arcgis/rest/services/priv_hos/FeatureServer",
+                outFields: ["*"],
+                popupTemplate: {
+                    title: `โรงพยาบาลเอกชน - {name}`,
+                    content: `
+                        <b>🗺️ ที่อยู่:</b> {address} <br>
+                        <b>🧭 รหัสไปรษณีย์:</b> {dcode} <br>
+                        <b>🏝️ เขต:</b> {dname} <br>
+                        <b>☎️ เบอร์ติดต่อ:</b> {tel} <br>
+                        <b>🌎 เว็บไซต์:</b> <a href="https://{url}" target="_blank">{name}</a> <br>
+                        <b>🛌 จำนวนเตียง:</b> {num_bed} <br>
+                        <img src="https://static.vecteezy.com/system/resources/thumbnails/007/681/899/small/hospital-building-outside-composition-vector.jpg" alt="Hospital Image" width="100%">
+                    `,
+                },
+                renderer: privHospitalPinRenderer,
+            });
+
+            const routeLayer = new RouteLayer();
+
+            const webmap = new WebMap({
+                    portalItem: {
+                    id: "cf011960a3e140dd9e157788c2b23d68",
+                }
+            });
+
+            // รอให้ webmap โหลดเสร็จ แล้วค่อย add layers เข้าไป
+            webmap.when(() => {
+                webmap.addMany([
+                    bangkokDistrictLayer,
+                    pharmacyCSVLayer,
+                    govHospitalFeatureLayer,
+                    privHospitalFeatureLayer,
+                    routeLayer,
+                ]);
+            });
+
+            // 🔹 สร้าง View
+            const view = new MapView({
+                container: "viewDiv",
+                map: webmap,
+                center: [100.54, 13.75], // พิกัดกลางของกรุงเทพฯ
+                zoom: 13.5,
+            });
+           
+            view.watch("zoom", function (newZoom) {
+                if (newZoom >= 13) {
+                    govHospitalFeatureLayer.renderer = govHospitalPinRenderer;
+                    privHospitalFeatureLayer.renderer = privHospitalPinRenderer;
+                } else {
+                    govHospitalFeatureLayer.renderer = govHospitalHeatmapRenderer;
+                    privHospitalFeatureLayer.renderer = privHospitalHeatmapRenderer;
+                }
+            });
+
+            const editor = new Editor({
+                    view: view,
+            });
+
+            view.ui.add(editor, "top-right");
+            editor.visible = false;
+
+            const searchWidget = new Search({
+            view: view,
+            sources: [
+                {
+                    layer: privHospitalFeatureLayer,
+                    name: "โรงพยาบาลเอกชน",
+                    searchFields: ["name", "dname", "dcode"],
+                    displayField: "name",
+                    exactMatch: false,
+                    outFields: ["*"],
+                    placeholder: "🔍 ค้นหาโรงพยาบาลเอกชน...",
+                    suggestionTemplate: "{name} - {address}",
+                    popupTemplate: {
+                        title: `โรงพยาบาล {name}`,
+                        content: `
+                            <b>🗺️ ที่อยู่:</b> {address} <br>
+                            <b>🧭 รหัสไปรษณีย์:</b> {dcode} <br>
+                            <b>🏝️ เขต:</b> {dname} <br>
+                            <b>☎️ เบอร์ติดต่อ:</b> {tel} <br>
+                            <b>🌎 เว็บไซต์:</b> <a href="https://{url}" target="_blank">{name}</a> <br>
+                            <b>🛌 จำนวนเตียง:</b> {num_bed} <br>
+                        `,
+                    },
+                },
+                {
+                    layer: govHospitalFeatureLayer,
+                    name: "โรงพยาบาลรัฐ",
+                    searchFields: ["name", "dname", "dcode"],
+                    displayField: "name",
+                    exactMatch: false,
+                    outFields: ["*"],
+                    placeholder: "🔍 ค้นหาโรงพยาบาลรัฐ...",
+                    suggestionTemplate: "{name} - {address}",
+                    popupTemplate: {
+                        title: `โรงพยาบาล {name}`,
+                        content: `
+                            <b>🗺️ ที่อยู่:</b> {address} <br>
+                            <b>🧭 รหัสไปรษณีย์:</b> {dcode} <br>
+                            <b>🏝️ เขต:</b> {dname} <br>
+                            <b>☎️ เบอร์ติดต่อ:</b> {tel} <br>
+                            <b>🌎 เว็บไซต์:</b> <a href="https://{url}" target="_blank">{name}</a> <br>
+                            <b>🛌 จำนวนเตียง:</b> {num_bed} <br>
+                            <b>🏥 สังกัด:</b> {belong} <br>
+                            <b>🗂️ ประเภท:</b> {type} <br>
+                        `,
+                    },
+                },
+                {
+                    layer: pharmacyCSVLayer,
+                    name: "ร้านขายยา",
+                    searchFields: ["dsName", "dsDistrict", "dsAddress"],
+                    displayField: "dsName",
+                    exactMatch: false,
+                    outFields: ["*"],
+                    placeholder: "🔍 ค้นหาร้่านขายยา...",
+                    suggestionTemplate: "{dsName} - {dsAddress}",
+                    popupTemplate: {
+                        title: `ร้่านขายยา {dsName}`,
+                        content: `
+                            <b>📍 ที่อยู่:</b> {dsAddress} <br>
+                            <b>🧭 โซน:</b> {bkkZone} <br>
+                            <b>🗺️ เขต:</b> {dsDistrict} <br>
+                            <b>☎️ เบอร์ติดต่อ:</b> {dsPhone} <br>
+                            <img src="https://img.graphicsurf.com/2020/09/people-in-pharmacy-vector-illustration.jpg" alt="Place Image" width="100%">
+                        `,
+                    },
+                }
+            ],
+            });
+
+            view.ui.add(searchWidget, {
+                position: "top-right",
+            });
+
+            view.ui.add(
+                new Home({
+                    view: view
+                }),
+                "top-left"
+            );
+
+            view.ui.add(
+                new Compass({
+                    view: view
+                }),
+                "top-left"
+            );
+       
+
+            view.ui.add(
+                new Legend({
+                    view: view,
+                    style: {
+                        type: "card", // other styles include 'classic'
+                        layout: "auto" // other layouts include 'stack' and 'side-by-side'
+                    }
+                }),
+                "bottom-left"
+            );
+
+            let directionsWidget = new Directions({
+                layer: routeLayer,
+                apiKey,
+                view
+            });
+
+            // Add the Directions widget to the top right corner of the view
+            view.ui.add(directionsWidget, {
+                position: "top-right"
+            });
+            
+            directionsWidget.visible = false;
+           
+            const targetLayers = [pharmacyCSVLayer,govHospitalFeatureLayer, privHospitalFeatureLayer];
+
+            const drawGraphicsLayer = new GraphicsLayer();
+            webmap.add(drawGraphicsLayer);
+
+            // Setup และเรียกใช้ SketchViewModel
+            const sketchViewModel = new SketchViewModel({
+                view: view,
+                layer: drawGraphicsLayer,
+            });
+
+            view.ui.add("select-by-circle", "top-left");
+
+            const selectButton = document.getElementById("select-by-circle");
+
+            selectButton.addEventListener("click", () => {
+                drawGraphicsLayer.removeAll();
+                view.closePopup();
+                sketchViewModel.create("circle");
+            });
+
+            const clearButton = document.getElementById("clear-selection");
+            view.ui.add("clear-selection", "top-left");
+
+            clearButton.addEventListener("click", () => {
+                drawGraphicsLayer.removeAll();
+                targetLayers.forEach((layer) => {
+                    layer.featureEffect = null;
+                });
+            });
+
+            sketchViewModel.on("create", async (drawData) => {
+                if (drawData.state === "complete") {
+                    console.log("drawData", drawData.graphic.geometry);
+                    
+                    targetLayers.forEach((layer) => {
+                        layer.featureEffect = {
+                            filter:{
+                                geometry: drawData.graphic.geometry,
+                            },
+                            includedEffect: "drop-shadow(3px, 3px, 3px, gray) brightness(1.2)",
+                            excludedEffect: "opacity(30%)"
+                        }
+                    });
+                }
+            });
+
+            sketchViewModel.on("update", (event) => {
+            if (event.state === "active") {
+                const updatedGeometry = event.graphics[0].geometry;
+                
+                targetLayers.forEach((layer) => {
+                layer.featureEffect = {
+                    filter: {
+                    geometry: updatedGeometry,
+                    },
+                    includedEffect: "drop-shadow(3px, 3px, 3px, gray) brightness(1.2)",
+                    excludedEffect: "opacity(30%)"
+                };
+                });
+            }
+            });
+            
+            setupToggleButton("edit-data-button", editor);
+            setupToggleButton("search-data-button", searchWidget);
+            setupToggleButton("find-route-button", directionsWidget);
+
+        });
+        // Ref: https://developers.arcgis.com/javascript/latest/sample-code/layers-featurelayer/
+    </script>
+
+</body>
+
+</html>
