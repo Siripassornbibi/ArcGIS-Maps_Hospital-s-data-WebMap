@@ -1,0 +1,4 @@
+// config.js
+var esriConfig = {
+    apiKey: "AAPTxy8BH1VEsoebNVZXo8HurO6R7OWkb4bmwjG96jGOFdU_21U3bnsNqmypGIpLtr4p8wtJViWhH9AFmTfZ4nogT6Ambby6xilluNLuSXND48A8c5AmIA-1kgjHeIXw84hvF6S4TZOBPR2_2oEpbhVuhBz6mw79zBWcVXlKr8G4FZ84p-VoTmV1_XWtgHspkf6mBj6EzPhQgJcO1zrFhxaz8TMKh7or3NtCPlcy_vJkgMk.AT1_dzEMY6Ea",
+};

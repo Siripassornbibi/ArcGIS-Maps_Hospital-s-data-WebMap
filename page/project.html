@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
     <title>🌍 Hospital's data in Bangkok Web Application</title>
 
     <style>
@@ -15,25 +15,31 @@
             margin: 0;
             padding: 0;
         }
-
-        @font-face {
-            font-family: 'ClashDisplay';
-            src: url('../fonts/ClashDisplay-Variable.ttf') format('truetype'); 
-        }
     </style>
+
+    <!-- import style -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="https://js.arcgis.com/4.32/esri/themes/light/main.css" />
+    <link rel="stylesheet" href="global.css">
+
+    <!-- import/config arcgis -->
+    <script src="../src/constants/apiKey.js"></script>
     <script>
-        var esriConfig = {
-            apiKey: "AAPTxy8BH1VEsoebNVZXo8HurO6R7OWkb4bmwjG96jGOFdU_21U3bnsNqmypGIpLtr4p8wtJViWhH9AFmTfZ4nogT6Ambby6xilluNLuSXND48A8c5AmIA-1kgjHeIXw84hvF6S4TZOBPR2_2oEpbhVuhBz6mw79zBWcVXlKr8G4FZ84p-VoTmV1_XWtgHspkf6mBj6EzPhQgJcO1zrFhxaz8TMKh7or3NtCPlcy_vJkgMk.AT1_dzEMY6Ea",
-        };
+        // Now you can access the esriConfig.apiKey here
+        console.log(esriConfig.apiKey);
     </script>
     <script src="https://js.arcgis.com/4.32/"></script>
 
+    <!-- import paths -->
+    <script type="module">
+        import { PATHS } from '../src/constants/paths.js';
+        window.PATHS = PATHS;
+    </script>
 
     <!-- import methods -->
     <script type="module">
         import { setupToggleButton } from '../method/filter.js';
-        window.setupToggleButton = setupToggleButton; // ส่งออกไว้บน window เพื่อให้ใช้ใน require ได้
+        window.setupToggleButton = setupToggleButton; 
     </script>
 
 </head>
@@ -99,8 +105,6 @@
                     RouteLayer,
                     Compass,
             ) {
-            const apiKey = "AAPTxy8BH1VEsoebNVZXo8HurO6R7OWkb4bmwjG96jGOFdU_21U3bnsNqmypGIpLtr4p8wtJViWhH9AFmTfZ4nogT6Ambby6xilluNLuSXND48A8c5AmIA-1kgjHeIXw84hvF6S4TZOBPR2_2oEpbhVuhBz6mw79zBWcVXlKr8G4FZ84p-VoTmV1_XWtgHspkf6mBj6EzPhQgJcO1zrFhxaz8TMKh7or3NtCPlcy_vJkgMk.AT1_dzEMY6Ea";
-
             const govHospitalHeatmapRenderer = new HeatmapRenderer({
                 colorStops: [
                     // ratio: ค่าระดับความหนาแน่น (ตั้งแต่ 0 ถึง 1)
@@ -152,7 +156,7 @@
                         maxValue: 10000,
                         symbol: {
                             type: "picture-marker",
-                            url: "../icon/L_G_HospitalIcon.png", 
+                            url: PATHS.ICONS.HOSPITAL_L_G, 
                             width: "45px",
                             height: "45px"
                         },
@@ -163,7 +167,7 @@
                         maxValue: 400,
                         symbol: {
                             type: "picture-marker",
-                            url: "../icon/M_G_HospitalIcon.png",
+                            url: PATHS.ICONS.HOSPITAL_M_G,
                             width: "45px",
                             height: "45px"
                         },
@@ -174,7 +178,7 @@
                         maxValue: 150,
                         symbol: {
                             type: "picture-marker",
-                            url: "../icon/S_G_HospitalIcon.png",
+                            url: PATHS.ICONS.HOSPITAL_S_G,
                             width: "45px",
                             height: "45px"
                         },
@@ -192,7 +196,7 @@
                         maxValue: 10000,
                         symbol: {
                             type: "picture-marker",
-                            url: "../icon/L_P_HospitalIcon.png", 
+                            url: PATHS.ICONS.HOSPITAL_L_P, 
                             width: "45px",
                             height: "45px"
                         },
@@ -203,7 +207,7 @@
                         maxValue: 400,
                         symbol: {
                             type: "picture-marker",
-                            url: "../icon/M_P_HospitalIcon.png",
+                            url: PATHS.ICONS.HOSPITAL_M_P,
                             width: "45px",
                             height: "45px"
                         },
@@ -214,7 +218,7 @@
                         maxValue: 150,
                         symbol: {
                             type: "picture-marker",
-                            url: "../icon/S_P_HospitalIcon.png",
+                            url: PATHS.ICONS.HOSPITAL_S_P,
                             width: "45px",
                             height: "45px"
                         },
@@ -227,7 +231,7 @@
                 type: "simple",
                 symbol: {
                     type: "picture-marker",
-                    url: "../icon/drugs.png", // URL ของไอคอน
+                    url: PATHS.ICONS.DRUGS, // URL ของไอคอน
                     width: "20px",
                     height: "20px"
                 },
@@ -242,7 +246,7 @@
             });
 
             const pharmacyCSVLayer = new CSVLayer({
-                url: "https://pharmacydata.tiiny.site/pharmacy_data.csv",
+                url: PATHS.CSV_DATA.PHARMACY,
                 latitudeField: "dsLatitude",
                 longitudeField: "dsLongitude",
                 popupTemplate: {
@@ -252,14 +256,14 @@
                     <b>🧭 โซน:</b> {bkkZone} <br>
                     <b>🗺️ เขต:</b> {dsDistrict} <br>
                     <b>☎️ เบอร์ติดต่อ:</b> {dsPhone} <br>
-                    <img src="https://img.graphicsurf.com/2020/09/people-in-pharmacy-vector-illustration.jpg" alt="Place Image" width="100%">
+                    <img src="${PATHS.IMAGES.PHARMACY}" alt="Pharmacy Image" width="100%">
                 `,
                 },
                 renderer: pharmacyPinRenderer, // Start with heatmap at low zoom levels
             });
 
             const govHospitalFeatureLayer = new FeatureLayer({
-                url: "https://services3.arcgis.com/D5fxuanxFwyX9ohT/arcgis/rest/services/gov_hos/FeatureServer",
+                url: PATHS.FEATURE_LAYERS.HOSPITAL_GOV,
                 outFields: ["*"],
                 popupTemplate: {
                     title: `โรงพยาบาลรัฐ - {name}`,
@@ -272,14 +276,14 @@
                         <b>🛌 จำนวนเตียง:</b> {num_bed} <br>
                         <b>🏥 สังกัด:</b> {belong} <br>
                         <b>🗂️ ประเภท:</b> {type} <br>
-                        <img src="https://static.vecteezy.com/system/resources/thumbnails/007/681/899/small/hospital-building-outside-composition-vector.jpg" alt="Hospital Image" width="100%">
+                        <img src="${PATHS.IMAGES.HOSPITAL}" alt="Hospital Image" width="100%">
                     `,
                 },
                 renderer: govHospitalPinRenderer,
             });
 
             const privHospitalFeatureLayer = new FeatureLayer({
-                url: "https://services3.arcgis.com/D5fxuanxFwyX9ohT/arcgis/rest/services/priv_hos/FeatureServer",
+                url: PATHS.FEATURE_LAYERS.HOSPITAL_PRIV,
                 outFields: ["*"],
                 popupTemplate: {
                     title: `โรงพยาบาลเอกชน - {name}`,
@@ -290,7 +294,7 @@
                         <b>☎️ เบอร์ติดต่อ:</b> {tel} <br>
                         <b>🌎 เว็บไซต์:</b> <a href="https://{url}" target="_blank">{name}</a> <br>
                         <b>🛌 จำนวนเตียง:</b> {num_bed} <br>
-                        <img src="https://static.vecteezy.com/system/resources/thumbnails/007/681/899/small/hospital-building-outside-composition-vector.jpg" alt="Hospital Image" width="100%">
+                        <img src="${PATHS.IMAGES.HOSPITAL}" alt="Hospital Image" width="100%">
                     `,
                 },
                 renderer: privHospitalPinRenderer,
@@ -361,6 +365,7 @@
                             <b>☎️ เบอร์ติดต่อ:</b> {tel} <br>
                             <b>🌎 เว็บไซต์:</b> <a href="https://{url}" target="_blank">{name}</a> <br>
                             <b>🛌 จำนวนเตียง:</b> {num_bed} <br>
+                            <img src="${PATHS.IMAGES.HOSPITAL}" alt="Hospital Image" width="100%">
                         `,
                     },
                 },
@@ -384,6 +389,7 @@
                             <b>🛌 จำนวนเตียง:</b> {num_bed} <br>
                             <b>🏥 สังกัด:</b> {belong} <br>
                             <b>🗂️ ประเภท:</b> {type} <br>
+                            <img src="${PATHS.IMAGES.HOSPITAL}" alt="Hospital Image" width="100%">
                         `,
                     },
                 },
@@ -403,7 +409,7 @@
                             <b>🧭 โซน:</b> {bkkZone} <br>
                             <b>🗺️ เขต:</b> {dsDistrict} <br>
                             <b>☎️ เบอร์ติดต่อ:</b> {dsPhone} <br>
-                            <img src="https://img.graphicsurf.com/2020/09/people-in-pharmacy-vector-illustration.jpg" alt="Place Image" width="100%">
+                            <img src="${PATHS.IMAGES.PHARMACY}" alt="Pharmacy Image" width="100%">
                         `,
                     },
                 }
@@ -442,8 +448,8 @@
 
             let directionsWidget = new Directions({
                 layer: routeLayer,
-                apiKey,
-                view
+                apiKey: esriConfig.apiKey,
+                view 
             });
 
             // Add the Directions widget to the top right corner of the view
@@ -482,6 +488,7 @@
                 targetLayers.forEach((layer) => {
                     layer.featureEffect = null;
                 });
+                routeLayer.removeAll();
             });
 
             sketchViewModel.on("create", async (drawData) => {
