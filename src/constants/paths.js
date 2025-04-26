@@ -1,4 +1,5 @@
 const ICON_PATH = "../public/icons";
+const COMPONENT_PATH = "../components";
 
 export const PATHS = {
   ICONS: {
@@ -25,5 +26,5 @@ export const PATHS = {
   IMAGES:{
     PHARMACY: "https://img.graphicsurf.com/2020/09/people-in-pharmacy-vector-illustration.jpg",
     HOSPITAL: "https://static.vecteezy.com/system/resources/thumbnails/007/681/899/small/hospital-building-outside-composition-vector.jpg",
-  }
+  },
 };

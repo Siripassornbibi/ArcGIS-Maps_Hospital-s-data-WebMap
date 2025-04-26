@@ -42,6 +42,18 @@
         window.setupToggleButton = setupToggleButton; 
     </script>
 
+    <script type="module">
+        import { setupZoomRendererSwitch } from '../method/setupZoomRendererSwitch.js';
+        window.setupZoomRendererSwitch = setupZoomRendererSwitch; 
+    </script>
+
+    <script type="module">
+        import { updateTable } from '../method/updateTable.js';
+        window.updateTable = updateTable;
+    </script>
+
+    <!-- import components -->
+
 </head>
 
 <body>
@@ -77,42 +89,82 @@
         <div class="text-xl font-bold grid justify-items-center w-[98vw]" style="font-family: 'ClashDisplay'">
             RESULT 
         </div>
-        <div class="rounded-lg p-5 mx-4 bg-sky-950 text-white w-[98vw] overflow-x-auto">
-            <table class="table-auto w-full">
-                <thead>
-                  <tr>
-                    <th>No.</th>
-                    <th>Name</th>
-                    <th>District</th>
-                    <th>Total Bed</th>
-                    <th>Tel</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>The Sliding Mr. Bones (Next Stop, Pottersville)</td>
-                    <td>Malcolm Lockyer</td>
-                    <td>1961</td>
-                    <td>1961</td>
-                    <td>1961</td>
-                  </tr>
-                  <tr>
-                    <td>The Sliding Mr. Bones (Next Stop, Pottersville)</td>
-                    <td>Malcolm Lockyer</td>
-                    <td>1961</td>
-                    <td>1961</td>
-                    <td>1961</td>
-                  </tr>
-                  <tr>
-                    <td>The Sliding Mr. Bones (Next Stop, Pottersville)</td>
-                    <td>Malcolm Lockyer</td>
-                    <td>1961</td>
-                    <td>1961</td>
-                    <td>1961</td>
-                  </tr>
-                </tbody>
-              </table>
-        </div>
+        <div class="rounded-lg p-5 mx-4 bg-sky-950 text-white w-[98vw] overflow-x-auto grid gap-2 grid-cols-3">
+            <div>
+                <div class="text-xl font-bold w-[98vw]" style="font-family: 'ClashDisplay'">
+                    💊 PHARMACY
+                </div>
+                <table class="table-auto w-full">
+                    <thead>
+                      <tr>
+                        <th>No.</th>
+                        <th>Name</th>
+                        <th>District</th>
+                        <th>Total Bed</th>
+                        <th>Tel</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>-</td>
+                          </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div>
+                <div class="text-xl font-bold w-[98vw]" style="font-family: 'ClashDisplay'">
+                    🏥 GOVERNMENT HOSPITAL
+                </div>
+                <table class="table-auto w-full">
+                    <thead>
+                      <tr>
+                        <th>No.</th>
+                        <th>Name</th>
+                        <th>District</th>
+                        <th>Total Bed</th>
+                        <th>Tel</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>-</td>
+                          </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div>
+                <div class="text-xl font-bold w-[98vw]" style="font-family: 'ClashDisplay'">
+                    🏥 PRIVATE HOSPITAL
+                </div>
+                <table class="table-auto w-full">
+                    <thead>
+                      <tr>
+                        <th>No.</th>
+                        <th>Name</th>
+                        <th>District</th>
+                        <th>Total Bed</th>
+                        <th>Tel</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>-</td>
+                      </tr>
+                    </tbody>
+                  </table>
+            </div>
     </div>
 
     <script>
@@ -370,22 +422,30 @@
                 center: [100.54, 13.75], // พิกัดกลางของกรุงเทพฯ
                 zoom: 13.5,
             });
-           
-            view.watch("zoom", function (newZoom) {
-                if (newZoom >= 13) {
-                    govHospitalFeatureLayer.renderer = govHospitalPinRenderer;
-                    privHospitalFeatureLayer.renderer = privHospitalPinRenderer;
-                } else {
-                    govHospitalFeatureLayer.renderer = govHospitalHeatmapRenderer;
-                    privHospitalFeatureLayer.renderer = privHospitalHeatmapRenderer;
-                }
-            });
+
+            // กำหนด renderers ที่แยกตามประเภท
+            const renderers = {
+            pin: {
+                gov: govHospitalPinRenderer,
+                priv: privHospitalPinRenderer
+            },
+            heatmap: {
+                gov: govHospitalHeatmapRenderer,
+                priv: privHospitalHeatmapRenderer
+            }
+            };
+
+            setupZoomRendererSwitch(view, [
+                { key: 'gov', layer: govHospitalFeatureLayer },
+                { key: 'priv', layer: privHospitalFeatureLayer }
+            ], renderers);
 
             const editor = new Editor({
                     view: view,
             });
 
             view.ui.add(editor, "top-right");
+
             editor.visible = false;
 
             const searchWidget = new Search({
@@ -548,28 +608,66 @@
                             excludedEffect: "opacity(30%)"
                         }
                     });
+
+                    await handleDrawOrUpdate(drawData.graphic.geometry);
                 }
             });
 
-            sketchViewModel.on("update", (event) => {
+            sketchViewModel.on("update", async (event) => {
                 if (event.state === "active") {
                     const updatedGeometry = event.graphics[0].geometry;
                     
                     targetLayers.forEach((layer) => {
-                    layer.featureEffect = {
-                        filter: {
-                        geometry: updatedGeometry,
-                        },
-                        includedEffect: "drop-shadow(3px, 3px, 3px, gray) brightness(1.2)",
-                        excludedEffect: "opacity(30%)"
-                    };
+                        layer.featureEffect = {
+                            filter: {
+                            geometry: updatedGeometry,
+                            },
+                            includedEffect: "drop-shadow(3px, 3px, 3px, gray) brightness(1.2)",
+                            excludedEffect: "opacity(30%)"
+                        };
                     });
+                    
+                    await handleDrawOrUpdate(event.graphics[0].geometry);
+                    
                 }
             });
             
             setupToggleButton("edit-data-button", editor);
             setupToggleButton("search-data-button", searchWidget);
             setupToggleButton("find-route-button", directionsWidget);
+
+            // ฟังก์ชันกลาง
+            async function handleDrawOrUpdate(geometry) {
+                console.log("🎯 geometry", geometry);
+
+                const selectedFeatures = [];
+
+                for (const layer of targetLayers) {
+                    const query = layer.createQuery();
+                    query.geometry = geometry;
+                    query.spatialRelationship = "intersects";
+
+                    const result = await layer.queryFeatures(query);
+                    console.log("Result from", layer.title, result);
+
+                    selectedFeatures.push(...result.features);
+                }
+
+                const now = new Date();
+                const formattedDate = now.toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' });
+
+                const radius = geometry.radius; 
+                const diameter = radius * 2;
+
+                console.log("🗓️ On Date:", formattedDate);
+                console.log("📏 Diameter (meters):", diameter);
+
+                updateTable(selectedFeatures, {
+                    date: formattedDate,
+                    diameter: diameter,
+                });
+            }
+
 
         });
         // Ref: https://developers.arcgis.com/javascript/latest/sample-code/layers-featurelayer/
