@@ -1,4 +1,5 @@
 const ICON_PATH = "../public/icons";
+const OTHER_PATH = "../public/other";
 const COMPONENT_PATH = "../components";
 
 export const PATHS = {

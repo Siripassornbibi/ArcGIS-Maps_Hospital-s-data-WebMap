@@ -52,6 +52,12 @@
         window.updateTable = updateTable;
     </script>
 
+    <script type="module">
+        import { showLoading, hideLoading } from '../method/loading.js';
+        window.showLoading = showLoading;
+        window.hideLoading = hideLoading;
+    </script>
+
     <!-- import components -->
 
 </head>
@@ -85,11 +91,15 @@
          </div>
     </div>
     
+    <div id="loading" class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-black bg-opacity-50 text-white rounded-lg text-xl hidden z-50">
+        <img src="../public/other/loading.gif" alt="loading Image" width="100px" height="50px">
+    </div>
+
     <div class="flex flex-col my-2 gap-2">
         <div class="text-xl font-bold grid justify-items-center w-[98vw]" style="font-family: 'ClashDisplay'">
             RESULT 
         </div>
-        <div class="rounded-lg p-5 mx-4 bg-sky-950 text-white w-[98vw] overflow-x-auto grid gap-2 grid-cols-3">
+        <div class="rounded-lg p-5 mx-4 bg-sky-950 text-white w-[98vw] overflow-x-auto grid gap-2 grid-cols-3 data-table">
             <div>
                 <div class="text-xl font-bold w-[98vw]" style="font-family: 'ClashDisplay'">
                     💊 PHARMACY
@@ -166,7 +176,13 @@
                   </table>
             </div>
     </div>
-
+    <footer>
+        <div class="text-center text-sm text-white bg-sky-950 m-0">
+            <p class="font-bold">© 2025 Hospital's data in Bangkok Web Application</p>
+            <p>Reference Data from: <a href="https://data.bangkok.go.th/dataset/" target="_blank">Open Data Bangkok</a></p>
+            <p>Developed by: <a href="https://github.com/Siripassornbibi" target="_blank">Siripassornbibi</a></p>
+        </div>
+    </footer>
     <script>
         require([
             "esri/Map",
@@ -398,6 +414,8 @@
 
             const routeLayer = new RouteLayer();
 
+            const drawGraphicsLayer = new GraphicsLayer();
+
             const webmap = new WebMap({
                     portalItem: {
                     id: "cf011960a3e140dd9e157788c2b23d68",
@@ -412,6 +430,7 @@
                     govHospitalFeatureLayer,
                     privHospitalFeatureLayer,
                     routeLayer,
+                    drawGraphicsLayer,
                 ]);
             });
 
@@ -565,9 +584,6 @@
            
             const targetLayers = [pharmacyCSVLayer,govHospitalFeatureLayer, privHospitalFeatureLayer];
 
-            const drawGraphicsLayer = new GraphicsLayer();
-            webmap.add(drawGraphicsLayer);
-
             // Setup และเรียกใช้ SketchViewModel
             const sketchViewModel = new SketchViewModel({
                 view: view,
@@ -593,7 +609,21 @@
                     layer.featureEffect = null;
                 });
                 routeLayer.removeAll();
-            });
+
+                const tbodys = document.querySelectorAll('table tbody');
+
+                tbodys.forEach(t => {
+                    t.innerHTML = `
+                        <tr>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>-</td>
+                        </tr>
+                    `;
+                    });
+                });
 
             sketchViewModel.on("create", async (drawData) => {
                 if (drawData.state === "complete") {
@@ -609,7 +639,14 @@
                         }
                     });
 
-                    await handleDrawOrUpdate(drawData.graphic.geometry);
+                    try {
+                        showLoading();
+                        await handleDrawOrUpdate(drawData.graphic.geometry);
+                    } catch (error) {
+                        console.error("❌ Error during create:", error);
+                    } finally {
+                        hideLoading();
+                    }
                 }
             });
 
@@ -627,8 +664,14 @@
                         };
                     });
                     
-                    await handleDrawOrUpdate(event.graphics[0].geometry);
-                    
+                    try {
+                        showLoading();
+                        await handleDrawOrUpdate(event.graphics[0].geometry);
+                    } catch (error) {
+                        console.error("❌ Error during create:", error);
+                    } finally {
+                        hideLoading();
+                    }
                 }
             });
             
