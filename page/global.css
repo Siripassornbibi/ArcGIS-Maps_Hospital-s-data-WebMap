@@ -1,4 +1,41 @@
+/* font */
 @font-face {
     font-family: 'ClashDisplay';
     src: url('../public/fonts/ClashDisplay-Variable.ttf') format('truetype'); 
 }
+
+/* table */
+td, th {
+    border-bottom: 1px solid;
+    padding: 3px 5px;
+}
+
+th {
+    padding: 5px;
+}
+  
+table {
+    width: 100%;
+    border-collapse: collapse;
+    border-color: aliceblue;
+    border-radius: 5px;
+    overflow: hidden; 
+    text-align: left;
+}
+
+thead tr {
+    background-color: aliceblue;
+    color: var(--color-sky-950);
+}
+
+tbody tr:nth-child(even) {
+    background-color:  rgb(64, 108, 146);
+}
+
+tbody tr {
+    transition: background-color 0.3s ease;
+}
+
+tbody tr:hover {
+    background-color: rgba(240, 248, 255, 0.5);
+} 

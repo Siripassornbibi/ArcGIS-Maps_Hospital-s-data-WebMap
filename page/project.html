@@ -38,7 +38,7 @@
 
     <!-- import methods -->
     <script type="module">
-        import { setupToggleButton } from '../method/filter.js';
+        import { setupToggleButton } from '../method/setupToggleButton.js';
         window.setupToggleButton = setupToggleButton; 
     </script>
 
@@ -49,26 +49,70 @@
         <div>
             <span style="padding-right:10px;">  🌍  </span>Hospital's data in Bangkok Web Application 
         </div>
-        <div class="flex gap-2">
+        <div class="flex gap-2 text-lg">
             <button id="search-data-button" class="bg-blue-300 hover:bg-blue-300 text-white font-bold py-1 px-3 rounded-full">🔎 search</button>
             <button id="find-route-button" class="bg-gray-900 hover:bg-blue-300 text-white font-bold py-1 px-3 rounded-full">🚗 find route</button>
             <button id="edit-data-button" class="bg-gray-900 hover:bg-blue-300 text-white font-bold py-1 px-3 rounded-full">✏️ edit</button>
         </div>
     </div>
-    <div id="viewDiv"></div>
-    <div
+
+    <div id="viewDiv">
+        <div
         id="select-by-circle"
         class="esri-widget esri-widget--button esri-widget esri-interactive"
         title="Select features by rectangle"
-    >
-        <span class="esri-icon-checkbox-unchecked"></span>
+        >
+         <span class="esri-icon-checkbox-unchecked"></span>
+        </div>
+        <div
+            id="clear-selection"
+            class="esri-widget esri-widget--button esri-widget esri-interactive"
+            title="Clear selection"
+        >
+            <span class="esri-icon-erase"></span>
+         </div>
     </div>
-    <div
-        id="clear-selection"
-        class="esri-widget esri-widget--button esri-widget esri-interactive"
-        title="Clear selection"
-    >
-        <span class="esri-icon-erase"></span>
+    
+    <div class="flex flex-col my-2 gap-2">
+        <div class="text-xl font-bold grid justify-items-center w-[98vw]" style="font-family: 'ClashDisplay'">
+            RESULT 
+        </div>
+        <div class="rounded-lg p-5 mx-4 bg-sky-950 text-white w-[98vw] overflow-x-auto">
+            <table class="table-auto w-full">
+                <thead>
+                  <tr>
+                    <th>No.</th>
+                    <th>Name</th>
+                    <th>District</th>
+                    <th>Total Bed</th>
+                    <th>Tel</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>The Sliding Mr. Bones (Next Stop, Pottersville)</td>
+                    <td>Malcolm Lockyer</td>
+                    <td>1961</td>
+                    <td>1961</td>
+                    <td>1961</td>
+                  </tr>
+                  <tr>
+                    <td>The Sliding Mr. Bones (Next Stop, Pottersville)</td>
+                    <td>Malcolm Lockyer</td>
+                    <td>1961</td>
+                    <td>1961</td>
+                    <td>1961</td>
+                  </tr>
+                  <tr>
+                    <td>The Sliding Mr. Bones (Next Stop, Pottersville)</td>
+                    <td>Malcolm Lockyer</td>
+                    <td>1961</td>
+                    <td>1961</td>
+                    <td>1961</td>
+                  </tr>
+                </tbody>
+              </table>
+        </div>
     </div>
 
     <script>
@@ -508,19 +552,19 @@
             });
 
             sketchViewModel.on("update", (event) => {
-            if (event.state === "active") {
-                const updatedGeometry = event.graphics[0].geometry;
-                
-                targetLayers.forEach((layer) => {
-                layer.featureEffect = {
-                    filter: {
-                    geometry: updatedGeometry,
-                    },
-                    includedEffect: "drop-shadow(3px, 3px, 3px, gray) brightness(1.2)",
-                    excludedEffect: "opacity(30%)"
-                };
-                });
-            }
+                if (event.state === "active") {
+                    const updatedGeometry = event.graphics[0].geometry;
+                    
+                    targetLayers.forEach((layer) => {
+                    layer.featureEffect = {
+                        filter: {
+                        geometry: updatedGeometry,
+                        },
+                        includedEffect: "drop-shadow(3px, 3px, 3px, gray) brightness(1.2)",
+                        excludedEffect: "opacity(30%)"
+                    };
+                    });
+                }
             });
             
             setupToggleButton("edit-data-button", editor);
