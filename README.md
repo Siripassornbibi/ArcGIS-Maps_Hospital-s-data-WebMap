@@ -7,7 +7,7 @@ The platform displays detailed information and locations of medical facilities o
 
 VIDEO 
 ------------------------------------------------------------------------------------------------------------------
-[[https://youtu.be/pRe1sOBKwJA?si=v687yNeuC5nZGaYk](https://youtu.be/pFWYaTvtwrk)](https://youtu.be/7_uNqSVH7dQ?si=f_2EznGbmR_r8v63)
+[[https://youtu.be/pRe1sOBKwJA?si=v687yNeuC5nZGaYk](https://youtu.be/pFWYaTvtwrk)]
 
 Development Tools:
 ------------------------------------------------------------------------------------------------------------------
